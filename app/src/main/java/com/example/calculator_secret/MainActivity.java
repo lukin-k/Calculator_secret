@@ -9,12 +9,14 @@ import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private TextView textViewInput;
     private String stringInput="";
     private TextView textViewOutput;
-    private String stringOutput="";
+    private String stringOutput="0";
     private HorizontalScrollView horizontalScrollViewInput;
 
     @Override
@@ -67,9 +69,123 @@ public class MainActivity extends AppCompatActivity {
         onClickButtonSign("/");
     }
 
+    private ArrayList<String> getPRN(String input){
+        ArrayList<String> result = new ArrayList<>();
+        ArrayList<Character> stack=new ArrayList<>();
+        String tmp="";
+        for (char c : stringInput.toCharArray()){
+            if (c=='+'||c=='-'||c=='*'||c=='/'||c=='('||c==')'){
+                if(tmp.length()>0){
+                    result.add(tmp);
+                    tmp="";
+                }
+                Boolean is_close_bracket=false;
+                for (int i=stack.size()-1; i>=0; --i){
+                    if(is_close_bracket||c==')'){
+                        Character sc=stack.get(i);
+                        if(sc=='('){
+                            stack.remove(i);
+                            break;
+                        }
+                        is_close_bracket=true;
+                        result.add(sc.toString());
+                        stack.remove(i);
+                        continue;
+                    }
+                    if(c=='+'||c=='-'){
+                        Character sc=stack.get(i);
+                        if(sc=='+'||sc=='-'||sc=='*'||sc=='/'){
+                            result.add(sc.toString());
+                            stack.remove(i);
+                            continue;
+                        }
+                    }
+                    if(c=='*'||c=='/'){
+                        Character sc=stack.get(i);
+                        if(sc=='*'||sc=='/'){
+                            result.add(sc.toString());
+                            stack.remove(i);
+                            continue;
+                        }
+                    }
+                    break;
+                }
+                if(c!=')'){
+                    stack.add(c);
+                }
+                continue;
+            }
+            tmp+=c;//число
+        }
+        if(tmp.length()>0){
+            result.add(tmp);
+        }
+        for (int i=stack.size()-1; i>=0; --i){
+            Character sc=stack.get(i);
+            result.add(sc.toString());
+            stack.remove(i);
+        }
+
+        return result;
+    }
+
+//    private
+
+    private Object getAnswerPRN(ArrayList<String> PRN){
+        Boolean is_find=false;
+        while (PRN.size()>1){
+            is_find=false;
+            for (int i=2; i<PRN.size(); ++i){
+                char c=PRN.get(i).toCharArray()[0];
+                if(PRN.get(i).length()==1&&(c=='+'||c=='-'||c=='*'||c=='/')){
+                    double val2;
+                    double val1;
+                    try {
+                        val1=Double.parseDouble(PRN.get(i-2));
+                        val2=Double.parseDouble(PRN.get(i-1));
+//                        val2=Double.parseDouble("loh");
+                    }catch (Exception e){
+                        break;
+                    }
+                    is_find=true;
+                    if(c=='+'){
+                        val1+=val2;
+                    }else if(c=='-'){
+                        val1-=val2;
+                    }else if(c=='*'){
+                        val1*=val2;
+                    }else if(c=='/'){
+                        val1/=val2;
+                    }
+                    PRN.set(i, String.valueOf(val1));
+                    PRN.remove(i-1);
+                    PRN.remove(i-2);
+                    break;
+                }
+            }
+            if(!is_find){
+                break;
+            }
+        }
+        if(!is_find){
+            return null;
+        }
+
+        return Double.parseDouble(PRN.get(0));
+
+    }
+
     public void onClick_equally(View view) {
+
+        ArrayList<String> PRN=getPRN(stringInput);
+        Object answer=getAnswerPRN(PRN);
+        if(answer==null){
+            stringOutput="error";
+        }else {
+            stringOutput= String.valueOf((double)answer);
+        }
+
         stringInput="";
-        stringOutput="557";
         textViewInput.setText(stringInput);
         textViewOutput.setText(stringOutput);
     }
@@ -127,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClick_C(View view) {
         stringInput="";
-        stringOutput="";
+        stringOutput="0";
         textViewInput.setText(stringInput);
         textViewOutput.setText(stringOutput);
     }
