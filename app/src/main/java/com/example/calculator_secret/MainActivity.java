@@ -1,15 +1,20 @@
 package com.example.calculator_secret;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +24,10 @@ public class MainActivity extends AppCompatActivity {
     private String stringOutput="0";
     private HorizontalScrollView horizontalScrollViewInput;
 
+    private long timeUpButtonEqually;
+    private long timePressButtonEqually;
+    private boolean isReadyToSecret=false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,6 +36,29 @@ public class MainActivity extends AppCompatActivity {
         horizontalScrollViewInput=findViewById(R.id.HorizontalScrollView_input);
 
         textViewOutput=findViewById(R.id.TextView_output);
+        final Button button_equally=findViewById(R.id.Button_equally);
+        button_equally.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(v==button_equally){
+                    if(event.getAction()==MotionEvent.ACTION_DOWN){
+                        timePressButtonEqually= new Date().getTime();
+//                        textViewInput.setText(String.valueOf(timePressButtonEqually));
+                    }
+
+                    if(event.getAction()==MotionEvent.ACTION_UP){
+                        timeUpButtonEqually=new Date().getTime();
+                        timePressButtonEqually=timeUpButtonEqually-timePressButtonEqually;
+                        if(timePressButtonEqually>4000){
+                            isReadyToSecret=true;
+                        }
+//                        Toast.makeText(getApplicationContext(), String.valueOf(timePressButtonEqually), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                return false;
+            }
+        });
+
     }
 
     private void autoScrollInput(){
@@ -129,7 +161,6 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-//    private
 
     private Object getAnswerPRN(ArrayList<String> PRN){
         Boolean is_find=false;
@@ -239,6 +270,21 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClick_3(View view) {
         onClickButtonNumeral("3");
+        if(isReadyToSecret){
+            isReadyToSecret=false;
+            if(new Date().getTime()-timeUpButtonEqually<5000){
+                int length=stringInput.length();
+                if(length>=3){
+                    String tmp = stringInput.substring(length-3, length);
+                    if(tmp.equals("123")){
+                        Intent intent=new Intent(this, SecretActivity.class);
+                        startActivity(intent);
+//                        Toast.makeText(this, "ogo", Toast.LENGTH_LONG).show();
+                    }
+                }
+
+            }
+        }
     }
 
     public void onClick_C(View view) {
